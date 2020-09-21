@@ -1,0 +1,23 @@
+{
+  "name": "currency-graph",
+  "version": "1.0.0",
+  "description": "Storing currencies changes and show by graph",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "gegham.hakobyan@gmail.com",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.20.0",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "fast-xml-parser": "^3.17.4",
+    "iconv": "^3.0.0",
+    "iconv-lite": "^0.6.2",
+    "mongoose": "^5.10.6",
+    "nodemon": "^2.0.4",
+    "windows-1251": "^1.0.0"
+  }
+}
