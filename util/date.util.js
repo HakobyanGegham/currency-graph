@@ -1,16 +1,39 @@
-const getTimestampFormattedDate = (date) => {
-  const year = date.getFullYear();
-  const month = date.getMonth() + 1;
-  const monthStr = month < 10 ? `0${month}` : `${month}`;
-  const dayStr = getDatePiece(date.getDate());
-  const hours = date.getHours();
-  const minutesStr = getDatePiece(date.getMinutes());
-  const secondsStr = getDatePiece(date.getSeconds());
-  return `${year}-${monthStr}-${dayStr} ${hours}:${minutesStr}:${secondsStr}`;
+const moment = require('moment');
+const keys = ['years', 'quarters', 'months', 'weeks', 'days', 'hours', 'minutes',
+  'seconds', 'milliseconds', 'y', 'Q', 'm', 'w', 'd', 'h', 'm', 's', 'ms'];
+
+const getFormattedDate = (date, format = 'YYYY-MM-DD HH:mm:ss') => {
+  if (!moment(date).isValid()) {
+    return false;
+  }
+  return moment(date).format(format);
 };
 
-const getDatePiece = (piece)=> {
-  return piece < 10 ? `0${piece}` : `${piece}`;
+const getSubstrDate = (date, duration, key) => {
+  if (keys.indexOf(key) === -1) {
+    return false;
+  }
+  if (!moment(date).isValid()) {
+    return false;
+  }
+  return moment(date).subtract(duration, key);
 };
 
-module.exports = getTimestampFormattedDate;
+const getAddDate = (date, duration, key) => {
+  if (keys.indexOf(key) === -1) {
+    return false;
+  }
+  if (!moment(date).isValid()) {
+    return false;
+  }
+  return moment(date).subtract(duration, key);
+};
+
+const isBetween = (date, beforeDate, afterDate) => {
+  if (!moment(date).isValid() || !moment(beforeDate).isValid() || !moment(afterDate).isValid()) {
+    return false;
+  }
+
+  return moment(date).isBetween(beforeDate, afterDate);
+};
+module.exports = {getFormattedDate, getSubstrDate, getAddDate, isBetween};

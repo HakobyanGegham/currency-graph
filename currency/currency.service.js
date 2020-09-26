@@ -1,19 +1,20 @@
 const makeGetRequest = require('../request.js');
 const Currency = require('./currency.schema');
 const parser = require('fast-xml-parser');
-const getTimestampFormattedDate = require('../util/date.util');
-const Iconv = require('iconv').Iconv;
+const {getSubstrDate, isBetween} = require('../util/date.util');
+const Dataset = require('./currency.dataset.struct');
 
 class CurrencyService {
   intervalsCount = 5;
+  intervalsDuration = 10;
 
   constructor(currencyModel) {
     this.model = currencyModel;
   }
 
-  async getStatistics() {
+  async getStatistics(intervalsDuration = this.intervalsDuration, intervalsCount = this.intervalsCount) {
     const currencies = await this.model.find();
-    const dataset = this.getDataset(currencies);
+    return this.getIntervals(currencies, intervalsDuration, intervalsCount);
   }
 
   async updateCurrencies() {
@@ -52,12 +53,9 @@ class CurrencyService {
 
   async create(newCurrency) {
     const {Name, NumCode, CharCode, Value} = newCurrency;
-    const date = new Date();
-    const CreatedAt = getTimestampFormattedDate(date);
+    const CreatedAt = new Date();
     const UpdatedAt = CreatedAt;
-    const Values = {
-      Value: parseFloat(Value.replace(',', '.')), CreatedAt, UpdatedAt
-    };
+    const Values = {Value: parseFloat(Value.replace(',', '.')), CreatedAt};
     const currency = new Currency({
       Name, NumCode, CharCode, Value, CreatedAt, UpdatedAt, Values
     });
@@ -68,33 +66,38 @@ class CurrencyService {
 
   async update(existingCurrency, newItem) {
     const lastValue = existingCurrency.Values[existingCurrency.Values.length - 1];
-    if (parseFloat(newItem.Value.replace(',', '.')).toFixed(2) !== lastValue.Value.toFixed(2)) {
-      const date = new Date();
-      const CreatedAt = getTimestampFormattedDate(date);
-      const UpdatedAt = CreatedAt;
-      const Values = {
-        Value: parseFloat(newItem.Value.replace(',', '.')), CreatedAt, UpdatedAt
-      };
-      existingCurrency.Values.push(Values);
-      existingCurrency.UpdatedAt = UpdatedAt;
-      existingCurrency.save();
+    existingCurrency.setGraphColor();
+    if (parseFloat(newItem.Value.replace(',', '.')).toFixed(5) === lastValue.Value.toFixed(5)) {
+      return;
     }
+    const CreatedAt = new Date();
+    const UpdatedAt = CreatedAt;
+    const Values = {
+      Value: parseFloat(newItem.Value.replace(',', '.')), CreatedAt
+    };
+    existingCurrency.Values.push(Values);
+    existingCurrency.UpdatedAt = UpdatedAt;
+    existingCurrency.save();
   }
 
-  getDataset(currencies) {
-    const dataset = {};
+  getIntervals(currencies, intervalsDuration, intervalsCount, key = 'minutes') {
+    const dataSetArray = [];
     currencies.forEach(currency => {
-      dataset[currency._id] = {
-        'label': currency.Name,
-        'char_code': currency.CharCode,
-        'backgroundColor': currency.GraphColor,
-        'borderColor': currency.GraphColor,
-        'fill': false,
-        'data': []
-      };
+      const dataset = this.getDataset(currency);
+      const date = new Date();
+      for (let i = 0; i < intervalsCount; i++) {
+        const startDate = getSubstrDate(date, intervalsDuration * i, key);
+        const endDate = getSubstrDate(date, intervalsDuration * i + 1, key);
+        dataset.setSingleInterval(currency, startDate, endDate);
+      }
+      dataSetArray.push(dataset);
     });
 
-    return dataset;
+    return dataSetArray;
+  }
+
+  getDataset(currency) {
+    return new Dataset(currency.Name, currency.CharCode, currency.GraphColor);
   }
 }
 

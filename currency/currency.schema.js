@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const getRandomNumbers = require('../util/math.util');
 
 const CurrencySchema = new mongoose.Schema({
   Name: {
@@ -25,11 +26,12 @@ const CurrencySchema = new mongoose.Schema({
   GraphColor: {type: String},
 });
 
-CurrencySchema.methods.setGraphColor = () => {
-  const red = Math.floor(Math.random() * Math.floor(255));
-  const blue = Math.floor(Math.random() * Math.floor(255));
-  const green = Math.floor(Math.random() * Math.floor(255));
-  this.graphColor = `rgb(${red}, ${green}, ${blue})`;
+CurrencySchema.methods.setGraphColor = function() {
+  const red = getRandomNumbers(255);
+  const blue = getRandomNumbers(255);
+  const green = getRandomNumbers(255);
+
+  this.GraphColor = `rgb(${red}, ${green}, ${blue})`;
 };
 
 module.exports = mongoose.model('Currency', CurrencySchema);
